@@ -1,0 +1,1076 @@
+
+"""
+
+UNIVERSITY OF CANBERRA
+----------------------
+Pattern Recognition and Machine Learning –Semester 2 2021
+
+
+TOPIC : STROKE PREDICTION USING PATTERN RECOGNITION & MACHINE LEARNING
+__________________________________________________________________________
+
+TEAM NAME : XANTHRONZ
+
+TEAM NO : 33
+__________________________________________________________________________
+
+TEAM MEMBERS: 
+ 
+u3228397 – ANU MARIA GEORGE
+
+u3219983 – RIYA SAJI MATHEW
+__________________________________________________________________________
+
+
+"""
+#=============================================================================
+
+#Importing required libraries.
+
+
+import pandas as pd                # Data processing, Input & Output load 
+ 
+import matplotlib.pyplot as plt    # Visualization & plotting
+
+import seaborn as sns              # Statistical Visualization
+
+import warnings
+warnings.filterwarnings('ignore')
+
+#=============================================================================
+
+#Loading stroke prediction dataset
+
+
+stroke_data = pd.read_csv("healthcare-dataset-stroke-data.csv",sep = ",")
+
+print()
+
+#-----------------------------------------------------------------------------
+
+# To create a list of all the column variables.
+
+list(stroke_data.columns)
+
+#------------------------------------------------------------------------------
+
+################# To get the shape of stroke_data. #################
+
+# The shape of the dataset is basically a representation of 
+# total rows and columns present in the dataset.
+
+stroke_data_row_count, stroke_data_column_count = stroke_data.shape
+
+print('Total number of rows:', stroke_data_row_count)
+#Total number of rows: 5110
+print('Total number of columns:', stroke_data_column_count)
+#Total number of columns: 12
+
+print()
+
+#------------------------------------------------------------------------------
+
+#################  To read the top 10 rows of stroke_data ################# 
+
+print(stroke_data.head(10))
+
+#[10 rows x 12 columns]
+
+# This is a binary classification problem
+# Target variable is stroke 
+
+print()
+
+#------------------------------------------------------------------------------
+
+################# To print a concise summary of stroke_data #################
+
+# Returns the data type of each column present in the stroke_data. 
+# Also, it tells about the null and not null values present in stroke_data.
+
+stroke_data.info()
+
+#-----------------------------
+
+# It can be observed that there are null values in column 'bmi'
+
+data_dtype = stroke_data.dtypes
+
+data_dtype.value_counts()
+
+#-----------------------------
+
+# Checking for duplicates.
+
+stroke_data.duplicated().sum()
+
+## No duplicates found
+#------------------------------------------------------------------------------
+
+# To view some basic statistical details like percentile, mean, std etc. of stroke_data
+
+stroke_data.describe()
+
+#------------------------------------------------------------------------------
+
+# Dropping 'id' column from stroke_data
+
+# 'id' is a unique number assigned to each patient to keep track of them 
+# and making them unique. Since it is not used in data analysis process
+# we can remove it.
+
+stroke_data.drop("id" , inplace=True , axis=1)
+
+#------------------------------------------------------------------------------
+
+# To check the distribution of target variable STROKE using Pie Chart
+
+labels = ["No Stroke : 95.1%", "Stroke : 4.9%" ]
+
+sizes = stroke_data["stroke"].value_counts(sort = True)
+colors = ["#E59866", "#84385d"]
+explode = (0.07,0.1) 
+plt.figure(figsize=(7,7))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', 
+        shadow=True, startangle=90,textprops={'fontsize': 20})
+plt.title("Stroke",fontweight = "bold",fontsize = 20)
+
+plt.show()
+
+# Stroke : 4.9%
+# No Stroke : 95.1%
+
+# =============================================================================
+
+#  EXPLORATORY DATA ANALYSIS
+
+# =============================================================================
+
+# The dataset is carefully analyzed to find the count of each variable and its relationship with stroke.
+
+# To plot the count of the Categoric variables.
+
+#categorial attributes as pies
+
+fig, ax = plt.subplots(4,2, figsize = (15,15))
+((ax1, ax2), (ax3, ax4), (ax5, ax6), (ax7, ax8)) = ax
+
+labels = ["Male", "Female"]
+values = stroke_data['gender'].value_counts().tolist()[:2]
+ax1.pie(x=values, labels=labels, colors = ["#6495ED", "#FF69B4"],autopct="%1.2f%%", shadow=True, explode=[0, 0.05],textprops={'fontsize': 20})
+ax1.set_title("Gender Distribution Pie Chart", fontdict={'fontsize': 20})
+
+labels = ["Not hypertension", "Hypertension"]
+values = stroke_data['hypertension'].value_counts().tolist()
+ax2.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4","#00C78C"], autopct="%1.2f%%", shadow=True, explode=[0, 0.2],textprops={'fontsize': 20})
+ax2.set_title("Hypertension Distribution Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["There is not heart disease", "There is heart disease"]
+values = stroke_data['heart_disease'].value_counts().tolist()
+ax3.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4"], autopct="%1.2f%%", shadow=True, explode=[0, 0.2],textprops={'fontsize': 20})
+ax3.set_title("Heart disease Distribution Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["married", "never married"]
+values = stroke_data['ever_married'].value_counts().tolist()
+ax4.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4"], autopct="%1.2f%%", shadow=True, explode=[0, 0.05],textprops={'fontsize': 20})
+ax4.set_title("Marriage Distribution Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["Private Job", "Self Employed", "Children", "Goverment Job", "Never Worked Before"]
+values = stroke_data['work_type'].value_counts().tolist()
+ax5.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4","#00C78C","#FFF68F","#00FFFF"],autopct="%1.2f%%", shadow=True, explode=[0.1, 0.1, 0.1, 0.1, 0.2],textprops={'fontsize': 20})
+ax5.set_title("Work Type Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["Urban Residence", "Rural Residence"]
+values = stroke_data['Residence_type'].value_counts().tolist()
+ax6.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4"] ,autopct="%1.2f%%", shadow=True, explode=[0, 0.05],textprops={'fontsize': 20})
+ax6.set_title("Residence Type Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["Never Smoked Before", "Unknown", "Smoked in the past", "Currently Smokes"]
+values = stroke_data['smoking_status'].value_counts().tolist()
+ax7.pie(x=values, labels=labels,colors = ["#6495ED", "#FF69B4","#00C78C","#FFF68F"] ,autopct="%1.2f%%", shadow=True, explode=[0.03, 0.03, 0.03, 0.03],textprops={'fontsize': 20})
+ax7.set_title("Smoking Status Pie Chart", fontdict={'fontsize': 14})
+
+labels = ["Didn't have Stroke", "Had Stroke"]
+values = stroke_data['stroke'].value_counts().tolist()
+ax8.pie(x=values, labels=labels, colors = ["#6495ED", "#FF69B4"],autopct="%1.2f%%", shadow=True, explode=[0, 0.2],textprops={'fontsize': 20})
+ax8.set_title("Stroke Pie Chart", fontdict={'fontsize': 14})
+
+plt.tight_layout()
+
+plt.show()
+
+#------------------------------------------------------------------------------
+
+# Let numeric be list of all the 3 float variables.
+
+numeric = ['age','avg_glucose_level', 'bmi']
+
+# To plot the count of the numeric variables.
+
+stroke_data[numeric].hist(figsize=(8,6),color = "#84385d")
+
+#------------------------------------------------------------------------------
+
+#gender v/s stroke
+
+sns.countplot(data=stroke_data[['gender','stroke']],x='stroke', hue='gender', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("Gender vs Stroke")
+plt.show()
+
+#------------------------------------------------------------------------------
+
+# hypertension v/s stroke
+
+stroke_data["hypertension"].value_counts()
+
+sns.countplot(data = stroke_data[['hypertension','stroke']],x='hypertension',hue='stroke', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("hypertension vs Stroke")
+plt.show()
+
+print (f'A person with hypertension has a probability of {round(stroke_data[stroke_data["hypertension"]==1]["stroke"].mean()*100,2)} % get a stroke')
+
+print (f'A person without hypertension has a probability of  {round(stroke_data[stroke_data["hypertension"]==0]["stroke"].mean()*100,2)} % get a stroke')
+
+#A person with hypertension has a probability of 13.25 % get a stroke
+#A person without hypertension has a probability of  3.97 % get a stroke
+
+#------------------------------------------------------------------------------
+
+# heart disease v/s stroke
+
+stroke_data["heart_disease"].value_counts()
+
+sns.countplot(data = stroke_data[['heart_disease','stroke']],x='heart_disease',hue='stroke', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("Heart disease vs Stroke")
+plt.show()
+
+print (f'A person with heart disease has a probability of {round(stroke_data[stroke_data["heart_disease"]==1]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person without heart disease has a probability of {round(stroke_data[stroke_data["heart_disease"]==0]["stroke"].mean()*100,2)} % get a stroke')
+
+# A person with heart disease has a probability of 17.03 % get a stroke
+
+# A person without heart disease has a probability of 4.18 % get a stroke
+
+#------------------------------------------------------------------------------
+
+# ever_married v/s stroke
+
+stroke_data["ever_married"].value_counts()
+
+sns.countplot(data = stroke_data[['ever_married','stroke']],x='ever_married',hue='stroke', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("Marital status vs Stroke")
+plt.show()
+
+print (f'A person who is married has a probability of {round(stroke_data[stroke_data["ever_married"]=="Yes"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person who is not  married has a probability of {round(stroke_data[stroke_data["ever_married"]=="No"]["stroke"].mean()*100,2)} % get a stroke')
+
+# A person who is married has a probability of 6.56 % get a stroke
+
+# A person who is not  married has a probability of 1.65 % get a stroke
+
+#------------------------------------------------------------------------------
+
+#  work_type  v/s stroke
+
+stroke_data["work_type"].value_counts()
+
+sns.countplot(data = stroke_data[['work_type','stroke']],x='work_type',hue='stroke', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("Work Type vs Stroke")
+plt.show()
+
+print (f'A person with private work has a probability of {round(stroke_data[stroke_data["work_type"]=="Private"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person with goverment job has a probability of {round(stroke_data[stroke_data["work_type"]=="Govt_job"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A child has a probability of {round(stroke_data[stroke_data["work_type"]=="children"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person never worked has a probability of {round(stroke_data[stroke_data["work_type"]=="Never_worked"]["stroke"].mean()*100,2)} % get a stroke')
+
+# A person with private work has a probability of 5.09 % get a stroke
+
+# A person with goverment job has a probability of 5.02 % get a stroke
+
+# A child has a probability of 0.29 % get a stroke
+
+# A person never worked has a probability of 0.0 % get a stroke
+
+#------------------------------------------------------------------------------
+
+# Residence_type  v/s stroke
+
+stroke_data["Residence_type"].value_counts()
+
+sns.countplot(data = stroke_data[['Residence_type','stroke']],x='Residence_type',hue='stroke', palette ="rocket_r")
+plt.yscale('symlog')
+plt.title("Residence type vs Stroke")
+plt.show()
+
+print (f'A person, who lives in urban area, has a probability of {round(stroke_data[stroke_data["Residence_type"]=="Urban"]["stroke"].mean()*100,2)} %  get a stroke')
+
+print()
+
+print (f'A person, who lives in rural area, has a probability of {round(stroke_data[stroke_data["Residence_type"]=="Rural"]["stroke"].mean()*100,2)} % get a stroke')
+
+# A person, who lives in urban area, has a probability of 5.2 %  get a stroke
+
+# A person, who lives in rural area, has a probability of 4.53 % get a stroke
+
+#------------------------------------------------------------------------------
+
+# age v/s stroke
+
+
+plt.style.use("seaborn-darkgrid")
+sns.kdeplot(x=stroke_data["age"], hue= stroke_data["stroke"], fill=True, common_norm=False, alpha=0.5, palette = "magma",linewidth=0)
+plt.title("Age vs Stroke")
+plt.show()
+
+# # Normally people who are aged above 40 years have higher chance of getting stroke
+# # It is maximum when the patient’s age is around 75–80.
+# # old people are more prone to stroke.
+
+#------------------------------------------------------------------------------
+
+# bmi v/s stroke
+
+plt.style.use("seaborn-darkgrid")
+sns.kdeplot(x=stroke_data["bmi"], hue= stroke_data["stroke"], fill=True, common_norm=False, alpha=0.7, palette = "magma",linewidth=0)
+plt.title("BMI vs Stroke")
+plt.show()
+
+#------------------------------------------------------------------------------
+
+# avg_glucose_level v/s stroke
+
+plt.style.use("seaborn-darkgrid")
+sns.kdeplot(x=stroke_data["avg_glucose_level"], hue= stroke_data["stroke"], fill=True, common_norm=False, palette = "magma",alpha=0.5, linewidth=0)
+plt.title("Average glucose level vs Stroke")
+plt.show()
+
+#------------------------------------------------------------------------------
+
+# smoking_status v/s stroke
+
+stroke_data["smoking_status"].value_counts()
+
+chart = sns.countplot(data = stroke_data[['smoking_status','stroke']],x='smoking_status',hue='stroke', palette ="rocket_r")
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90, horizontalalignment='right')
+plt.title("Smoking Statusvs Stroke")
+plt.show()
+
+print (f'A formerly smoked person has a probability of {round(stroke_data[stroke_data["smoking_status"]=="formerly smoked"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person never smoked has a probability of {round(stroke_data[stroke_data["smoking_status"]=="never smoked"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person smokes has a probability of {round(stroke_data[stroke_data["smoking_status"]=="smokes"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+print (f'A person with unknown smoking history ,has a probability of {round(stroke_data[stroke_data["smoking_status"]=="Unknown"]["stroke"].mean()*100,2)} % get a stroke')
+
+print()
+
+# A formerly smoked person has a probability of 7.91 % get a stroke
+ 
+# A person never smoked has a probability of 4.76 % get a stroke
+
+# A person smokes has a probability of 5.32 % get a stroke
+
+# A person with unknown smoking history ,has a probability of 3.04 % get a stroke
+
+#==============================================================================
+
+# Correlation matrix
+
+stroke_data.corr()
+
+# Visualisation of the corralation table
+correlation = stroke_data.corr()
+
+sns.set(font_scale=1.6)
+plt.figure(figsize=(11,9))
+sns.heatmap(correlation, linecolor='white',linewidths=0.1, annot=True)
+plt.title('Correlation Matric', size=17)
+plt.xlabel('Stroke Data' , fontsize = 17, labelpad=15)
+plt.ylabel('Stroke Data', fontsize = 17, labelpad=15)
+plt.show()
+
+
+################# Check for missing values in stroke_data #################
+
+
+#  heatmaps of missing values.
+
+sns.heatmap(stroke_data.isnull(),cbar = False,cmap="viridis")
+
+print(stroke_data.isnull().sum())
+
+ # The column 'bmi' has 201 missing values which need to be treated.
+ 
+# # The variable 'bmi' has less number of missing values.
+# # As a result, we will not drop the 'bmi' column from stroke_data,
+# # since it will lead to loss of information.
+
+################# Treating missing values #################
+
+bmi_median = stroke_data['bmi'].median() # missing values in column 'bmi' replaced with median
+
+
+bmi_median
+
+stroke_data['bmi'].fillna(value=bmi_median, inplace=True)
+
+#------------------------------------------------------------------------------
+
+# When we examine our data, we see that the data in 
+# the age column contains meaningless values that might deviate our 
+#estimations. 
+
+# For example, when we retrieve the 10 youngest people  
+# with 'stroke', we see 1.320 years old and 14.00 years old.
+
+# it would be appropriate to drop everyone under the age of 14 to make 
+# more meaningful predictions using this data.
+
+stroke_data[stroke_data['stroke'] == 1]['age'].nsmallest(10)
+
+stroke_data[stroke_data['stroke'] == 0]['age'].nsmallest(10)
+
+stroke_data = stroke_data[stroke_data['age'] >= 10]  # new stroke data with people above 10 years 
+
+
+# Remove gender == "Other"
+
+stroke_data = stroke_data[stroke_data.gender != 'Other']
+
+#------------------------------------------------------------------------------
+
+#  To converts categorical data into dummy or indicator variables.
+
+# pd. get_dummies when applied to a column of categories where we have one category 
+# per observation will produce a new column (variable) for each unique categorical value.
+
+
+dummies_gender = pd.get_dummies(stroke_data['gender'])
+
+dummies_work_type = pd.get_dummies(stroke_data['work_type'])
+
+dummies_residence_type = pd.get_dummies(stroke_data['Residence_type'])
+
+dummies_smoking_status = pd.get_dummies(stroke_data['smoking_status'])
+
+dummies_ever_married = pd.get_dummies(stroke_data['ever_married'])
+
+stroke_data = pd.concat([stroke_data,dummies_gender,dummies_work_type,dummies_residence_type,dummies_smoking_status,dummies_ever_married],axis='columns')
+
+stroke_data
+
+
+# Now from the above dataframe we can now drop the old categorical values as they are 
+# being converted to numeric data through one hot encoding.
+
+stroke_data.drop(columns=['gender','ever_married','work_type','Residence_type','smoking_status'],inplace=True)
+
+stroke_data
+
+#------------------------------------------------------------------------------
+
+################# Handling imbalance ################# 
+
+#We use SMOTE (Synthetic Minority Oversampling Technique) to handle class imbalance.
+
+from imblearn.over_sampling import SMOTE
+
+X = stroke_data.drop('stroke',axis=1)   # contains only predictors  
+
+Y = stroke_data['stroke']               # response variable , stroke
+
+smote = SMOTE(random_state = 0)
+
+X, Y = smote.fit_resample(X, Y)
+
+X.shape    # To get dimension of X_train
+
+Y.shape    # To get dimension of Y_train
+
+print (sum(Y == 1))
+
+print (sum(Y== 0))
+
+# plotting balanced dataset
+
+labels = ["Stroke", "No Stroke" ]
+ 
+sizes = Y.value_counts(sort = True)
+colors = ["#E59866", "#84385d"]
+explode = (0.05,0) 
+plt.figure(figsize=(7,7))
+plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=90,textprops={'fontsize': 20})
+plt.title("Stroke",fontweight = "bold",fontsize = 20)
+
+plt.show()
+
+################# splitting model #################
+
+# Load train_test_split library from sklearn
+
+from sklearn.model_selection import train_test_split
+
+# Splitting dataset using train_test_split()
+
+# 70% of data in training set.
+# 30% of data in test set.
+
+X_train, X_test, Y_train, Y_test = train_test_split( X, Y, test_size = 0.3, random_state = 0)
+
+X_train.shape        # To get dimension of X_train
+
+X_test.shape         # To get dimension of X_test
+
+Y_train.shape        # To get dimension of Y_train
+
+Y_test.shape         # To get dimension of Y_test
+
+print(sum(Y_test == 1))   # total stroke cases in Y_test is 1325
+print(sum(Y_test == 0))   # total no stroke cases in Y_test is 1309
+print (sum(Y_train == 1))   # total stroke cases in Y_train is 3064
+print (sum(Y_train == 0))   # total no stroke cases in Y_train is 3080
+
+#------------------------------------------------------------------------------
+
+from sklearn.preprocessing import  MinMaxScaler
+
+scaler = MinMaxScaler()
+
+scaler
+
+X_train = scaler.fit_transform(X_train)
+
+X_test = scaler.transform(X_test)
+
+#------------------------------------------------------------------------------
+
+# Importing required libraries fro classification
+
+from sklearn import metrics
+
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score, ConfusionMatrixDisplay, precision_score, recall_score, f1_score, classification_report, roc_curve, plot_roc_curve, auc, precision_recall_curve, plot_precision_recall_curve, average_precision_score
+
+from sklearn.metrics import plot_confusion_matrix
+
+from sklearn.model_selection import GridSearchCV
+
+import random 
+
+################# LOGISTIC REGRESSION #################
+
+from sklearn.linear_model import LogisticRegression
+
+Logistic_Regression_model = LogisticRegression()
+
+# Default Parameter
+
+Logistic_Regression_model.fit(X_train, Y_train)
+
+Y_pred = Logistic_Regression_model.predict(X_test)
+
+
+precision = precision_score(Y_test,Y_pred)
+
+recall = recall_score(Y_test, Y_pred)
+
+f1_score = f1_score(Y_test, Y_pred,average='weighted')
+
+roc = roc_auc_score(Y_test, Y_pred)
+
+
+Confusion_matrix = confusion_matrix(Y_test, Y_pred)
+
+print ('Precision score is ', round(precision,4))
+print ('--')
+
+print ('Recall Score is ', round(recall,4))
+print ('--')
+
+print ('ROC Score is', round(roc,4))
+print ('--')
+
+print ('F1-Score is ', round(f1_score,4))
+
+#Precision score is  0.9983
+
+# Recall Score is  0.9125
+
+# ROC Score is 0.9555
+
+# F1-Score is  0.9551
+
+# To plot confusion matrix
+
+ax =sns.heatmap(Confusion_matrix , annot = True, fmt="d", cmap = "GnBu_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('Logistic Regression Confusion Matrix');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+# Hyperparameter tuning using GridSearchCV
+
+# Setting Hyper Parameters 
+
+params={'C': range(1,10)}
+
+random.seed(50)
+
+Grid_Logistic = GridSearchCV(Logistic_Regression_model, param_grid = params)
+
+# Fit the grid search to the data
+Grid_Logistic.fit(X_train, Y_train)
+
+print("Best Hyper Parameters:", Grid_Logistic.best_params_)
+
+Grid_Logistic.best_params_
+
+best_grid = Grid_Logistic.best_estimator_
+
+print("Best Hyper Parameters:",Grid_Logistic.best_params_)
+
+LR_Y_pred = best_grid.predict(X_test)
+
+
+LR_precision = precision_score(Y_test, LR_Y_pred , average='weighted')
+
+LR_recall = recall_score(Y_test, LR_Y_pred , average='weighted')
+
+LR_f1_score = metrics.f1_score(Y_test, LR_Y_pred , average='weighted')
+
+LR_roc = roc_auc_score(Y_test, LR_Y_pred)
+
+LR_Confusion_matrix = confusion_matrix(Y_test, LR_Y_pred)
+
+
+print ('Precision score is ', LR_precision)
+
+print ('--')
+
+print ('Recall Score is ', LR_recall)
+
+print ('--')
+
+print ('F1-Score is ', LR_f1_score)
+
+print ('--')
+
+print ('ROC Score is', LR_roc)
+
+print ('--')
+
+print(classification_report(Y_test, LR_Y_pred))
+
+#---------------
+
+# To plot confusion matrix
+
+ax =sns.heatmap(LR_Confusion_matrix , annot = True, fmt="d", cmap = "GnBu_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('Logistic Regression using best parameter');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+#------------------------------------------------------------------------------
+
+print()
+
+print()
+
+print("  K-NEAREST-NEIGHBOUR  ")
+
+
+################# K-NEAREST-NEIGHBOR #################
+
+from sklearn.neighbors import KNeighborsClassifier
+
+knn_model = KNeighborsClassifier( )
+
+# Default parameter result
+
+knn_model.fit(X_train, Y_train)
+
+Y_pred = knn_model.predict(X_test)
+
+precision = precision_score(Y_test, Y_pred)
+
+roc = roc_auc_score(Y_test, Y_pred)
+
+recall = recall_score(Y_test, Y_pred)
+
+f1_score = metrics.f1_score(Y_test, Y_pred,average='weighted')
+
+
+knn_matrix = confusion_matrix(Y_test, Y_pred)
+
+print ('Precision score is ', precision)
+print ('--')
+
+print ('Recall Score is ', recall)
+print ('--')
+
+print ('ROC Score is', roc)
+print ('--')
+
+print ('F1-Score is ', round(f1_score,4))
+
+# Precision score is  0.9818897637795275
+
+# Recall Score is  0.9411320754716981
+
+# ROC Score is 0.9617807054211048
+
+# F1-Score is  0.9616
+
+# To plot confusion matrix
+
+ax =sns.heatmap(knn_matrix , annot = True,fmt="d", cmap = "Greens_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('KNN Confusion Matrix');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+
+#---------------------------------------------------
+
+
+params={'n_neighbors': range(1,31)}
+
+
+random.seed(50)
+
+Grid_KNN = GridSearchCV (estimator = knn_model, param_grid = params)
+
+# Fit the grid search to the data
+Grid_KNN.fit(X_train, Y_train)
+
+Grid_KNN.best_params_
+
+
+best_grid = Grid_KNN.best_estimator_
+
+
+print("Best Hyper Parameters:",Grid_KNN.best_params_)
+
+
+knn_Y_pred = best_grid.predict(X_test)
+
+
+knn_precision = precision_score(Y_test,knn_Y_pred , average='weighted')
+
+knn_recall = recall_score(Y_test, knn_Y_pred , average='weighted')
+
+knn_f1_score = metrics.f1_score(Y_test, knn_Y_pred , average='weighted')
+
+knn_roc = roc_auc_score(Y_test, knn_Y_pred)
+
+knn_Confusion_matrix = confusion_matrix(Y_test, knn_Y_pred)
+
+
+print(classification_report(Y_test, knn_Y_pred))
+
+
+print ('Precision score is ', round(knn_precision,4))
+print ('--')
+
+print ('Recall Score is ', round(knn_recall,4))
+print ('--')
+
+print ('F1-Score is ', round(knn_f1_score,4))
+print ('--')
+
+print ('ROC Score is', round(knn_roc,4))
+print ('--')
+
+# To plot confusion matrix
+
+ax =sns.heatmap(knn_Confusion_matrix , annot = True,fmt="d", cmap = "Greens_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('KNN using best parameter');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+# Precision score is  0.9649
+
+# Recall Score is  0.9636
+
+# F1-Score is  0.9635
+
+# ROC Score is 0.9637
+
+#------------------------------------------------------------------------------
+
+print()  
+
+print()
+
+print("  RANDOM FOREST CLASSIFIER  ")
+
+
+
+################# RANDOM FOREST CLASSIFIER #################
+
+from sklearn.ensemble import RandomForestClassifier
+
+Randon_Forest_model =  RandomForestClassifier(random_state=0)
+
+# Default Parameter
+
+Randon_Forest_model.fit(X_train, Y_train)
+Y_pred = Randon_Forest_model.predict(X_test)
+
+precision = precision_score(Y_test, Y_pred)
+
+recall = recall_score(Y_test, Y_pred)
+
+f1_score = metrics.f1_score(Y_test, Y_pred,average='weighted')
+
+roc = roc_auc_score(Y_test, Y_pred)
+
+rf_Confusion_matrix = confusion_matrix(Y_test, Y_pred)
+
+print ('Precision score is ', precision)
+print ('--')
+
+print ('Recall Score is ', recall)
+print ('--')
+
+
+print ('ROC Score is', roc)
+print ('--')
+
+
+print ('F1 Score is', f1_score )
+print ('--')
+
+# Precision score is  0.9912350597609562
+
+# Recall Score is  0.9388679245283019
+
+# ROC Score is 0.9652322815918821
+
+# F1 Score is 0.9650530959191963
+
+# To plot confusion matrix
+
+ax =sns.heatmap(rf_Confusion_matrix , annot = True,fmt="d", cmap = "BuPu_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('Random Forest Confusion Matrix');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+#-----------------------
+
+#Create the parameter grid 
+params = {'n_estimators': [100, 200, 300, 500, 1000] , 
+              'max_features': [2, 3], 
+              'max_depth': [80, 100, 110]
+              
+              }
+
+random.seed(50)
+
+# Instantiate the grid search model
+Grid_RM = GridSearchCV (estimator = Randon_Forest_model, param_grid = params)
+
+# Fit the grid search to the data
+
+Grid_RM.fit(X_train, Y_train)
+
+Grid_RM.best_params_
+
+best_grid = Grid_RM.best_estimator_
+
+print("Best Hyper Parameters:",Grid_RM.best_params_)
+
+RF_Y_pred = best_grid.predict(X_test)
+
+RF_precision = precision_score(Y_test, RF_Y_pred, average='weighted' )
+
+RF_recall = recall_score(Y_test, RF_Y_pred , average='weighted')
+
+rf_f1_score = metrics.f1_score(Y_test, RF_Y_pred, average='weighted')
+
+RF_roc = roc_auc_score(Y_test, RF_Y_pred )
+
+RF_Confusion_matrix = confusion_matrix(Y_test, RF_Y_pred)
+
+print ('Precision score is ', round(RF_precision,4))
+print ('--')
+
+print ('Recall Score is ', round(RF_recall,4))
+print ('--')
+
+print ('F1-Score is ', round(rf_f1_score,4))
+print ('--')
+
+print ('ROC Score is', round(RF_roc,4))
+print ('--')
+
+print(classification_report(Y_test, RF_Y_pred))
+
+
+
+# To plot confusion matrix
+
+ax =sns.heatmap(RF_Confusion_matrix , annot = True,fmt="d", cmap = "BuPu_r")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('Random Forest using best parameter');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+
+#--------------------------------------------------------------------------------
+
+########## Support Vector classifier #########################
+
+from sklearn.svm import SVC
+
+SVC_model = SVC()
+
+# Default parameter
+
+SVC_model.fit(X_train, Y_train)
+
+Y_pred = SVC_model.predict(X_test)
+
+precision = precision_score(Y_test, Y_pred)
+
+recall = recall_score(Y_test, Y_pred)
+
+f1_score = metrics.f1_score(Y_test, Y_pred,average='weighted')
+
+roc = roc_auc_score(Y_test, Y_pred)
+
+svc_Confusion_matrix = confusion_matrix(Y_test, Y_pred)
+
+print ('Precision score is ', precision)
+print ('--')
+
+print ('Recall Score is ', recall)
+print ('--')
+
+print ('ROC Score is', roc)
+print ('--')
+
+print ('F1 Score is', f1_score )
+print ('--')
+
+# Precision score is  1.0
+
+# Recall Score is  0.9086792452830189
+
+# ROC Score is 0.9543396226415095
+
+# F1 Score is 0.9539780062196905
+
+
+# To plot confusion matrix
+
+ax =sns.heatmap(svc_Confusion_matrix , annot = True,fmt="d" ,  cmap = "Blues")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('SVC Confusion Matrix');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+#------------------------------------------------------------------------
+
+params=[{'C': [0.5,0.1,1,5,10],'kernel': ['linear'],'class_weight':['balanced']},
+            {'C': [0.5,0.1,1,5,10],'gamma': [0.0001,0.001,0.01,0.1,0.005,0.05,0.5],
+             'kernel': ['rbf'],'class_weight': ['balanced']}]
+
+
+# Running the Grid Search on parameters and fit the trainning data
+
+Grid_SVC = GridSearchCV (estimator = SVC_model, param_grid = params)
+
+# Fit the grid search to the data
+Grid_SVC.fit(X_train, Y_train)
+
+Grid_SVC.best_params_
+
+best_grid = Grid_SVC.best_estimator_
+
+print("Best Hyper Parameters:", Grid_SVC.best_params_)
+
+SVC_Y_pred = best_grid.predict(X_test)
+
+
+SVC_precision = precision_score(Y_test, SVC_Y_pred, average='weighted' )
+
+SVC_recall = recall_score(Y_test, SVC_Y_pred , average='weighted')
+
+SVC_f1_score = metrics.f1_score(Y_test, SVC_Y_pred, average='weighted')
+
+SVC_roc = roc_auc_score(Y_test, SVC_Y_pred )
+
+SVC_Confusion_matrix = confusion_matrix(Y_test, SVC_Y_pred)
+
+print ('Precision score is ', round(SVC_precision,4))
+print ('--')
+
+print ('Recall Score is ', round(SVC_recall,4))
+print ('--')
+
+print ('F1-Score is ', round(SVC_f1_score,4))
+print ('--')
+
+print ('ROC Score is', round(SVC_roc,4))
+print ('--')
+
+print(classification_report(Y_test, SVC_Y_pred))
+
+
+# To plot confusion matrix
+
+ax =sns.heatmap(SVC_Confusion_matrix , annot = True,fmt="d", cmap = "Blues")
+## Modify the Axes Object directly to set various attributes such as the
+## Title, X/Y Labels.
+ax.set_title('SVC using best parameter');
+ax.set_xlabel('Predicted')
+ax.set_ylabel('Actual')
+plt.show()
+
+
+######################################## END #############################################
+
